@@ -1,34 +1,34 @@
-# 📦 D2C E-Commerce Logistics & Margin Recovery SQL Engine
+## 📊 Business Problem Diagnostics & SQL Results
 
-An end-to-end relational SQL analytics project executed in MySQL to isolate reverse logistics cost leakages, identify regional return hotspots, and evaluate SKU-level defect concentrations.
+### 1. Payment Channel Risk Analysis
+* **Core Insight:** COD orders exhibit a 9.68% return rate, driving ₹1,320+ in reverse freight losses compared to digital channels.
 
----
-
-## 📌 Executive Summary & Key Findings
-* **Channel Exposure:** Cash on Delivery (COD) orders produce a **9.68% return rate**, generating disproportionate dead freight loss compared to prepaid channels like Net Banking (4.29%) and Credit Cards (5.84%).
-* **Product Defect Concentration:** *Hair Growth Actives Serum* (7 returns) and *Oat Extract Gentle Cleanser* (6 returns) ranked #1 in returns within their categories.
-* **Geographic Risk:** *West Bengal* (12.77%), *Delhi* (8.89%), and *Madhya Pradesh* (8.44%) were categorized as *High Risk Hubs*.
-* **Root Cause Breakdown:** *Skin irritation* was the single largest return driver for Cleansers (41.67%) and Body Care (33.33%).
-* **Customer Segmentation:** Identified a segment of 10 chronic returners (2+ returns) averaging 4.30 orders per user.
+![Payment Channel Output](your_screenshot_1_filename.png)
 
 ---
 
-## 🛠️ Advanced SQL Techniques Demonstrated
-* **Window Functions:** `DENSE_RANK() OVER (PARTITION BY ...)` for category SKU rankings and windowed aggregations for root cause percentages.
-* **Common Table Expressions (CTEs):** Multi-level subqueries for customer cohort segmentation.
-* **Conditional Logic:** `CASE WHEN` statements for risk tiering and customer behavior classification.
-* **Defensive Calculations:** Normalized ratios and rate multipliers for dead freight cost modeling (₹110/return).
+### 2. Category Defect Concentration (Window Function: `DENSE_RANK`)
+* **Core Insight:** Hair Growth Actives Serum (7 returns) and Oat Extract Gentle Cleanser (6 returns) ranked #1 in returns across respective lines.
+
+![Product Ranking Output](your_screenshot_2_filename.png)
 
 ---
 
-## 📂 Database Schema Overview
-* **`customers`**: Customer geographic mapping (`customer_id`, `state`, `city`).
-* **`orders`**: Transaction records, order dates, and payment channels (`order_id`, `payment_method`, `order_date`).
-* **`order_items`**: Order-level SKU links (`order_id`, `product_id`, `quantity`).
-* **`products`**: Catalog attributes and categories (`product_id`, `category`, `product_name`).
-* **`returns`**: Defect root causes and return dates (`order_id`, `return_reason`).
+### 3. Geographic High-Risk Delivery Clusters
+* **Core Insight:** West Bengal (12.77%), Delhi (8.89%), and MP (8.44%) flagged into the highest delivery risk tiers.
+
+![Geographic Risk Output](your_screenshot_3_filename.png)
 
 ---
 
-## 🚀 How to Run
-Execute `analysis.sql` against MySQL, PostgreSQL, SQLite, or Snowflake using the provided CSV datasets.
+### 4. Root-Cause Defect Decomposition
+* **Core Insight:** Skin irritation accounts for >40% of returns in Cleansers and 33% in Body Care.
+
+![Root Cause Output](your_screenshot_4_filename.png)
+
+---
+
+### 5. Chronic Returner Segmentation (CTE Pipeline)
+* **Core Insight:** Isolated 10 repeat returners placing an average of 4.30 orders per user.
+
+![Customer Segmentation Output](your_screenshot_5_filename.png)
