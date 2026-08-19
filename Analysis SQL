@@ -1,0 +1,82 @@
+SELECT 
+    o.payment_method,
+    COUNT(DISTINCT o.order_id) AS total_orders,
+    COUNT(DISTINCT r.order_id) AS total_returns,
+    ROUND(COUNT(DISTINCT r.order_id) * 100.0 / COUNT(DISTINCT o.order_id), 2) AS return_rate_pct,
+    COUNT(DISTINCT r.order_id) * 110 AS dead_freight_loss_inr
+FROM orders o
+LEFT JOIN returns r ON o.order_id = r.order_id
+GROUP BY o.payment_method
+ORDER BY dead_freight_loss_inr DESC;
+
+WITH RankedProducts AS (
+    SELECT 
+        p.category,
+        p.product_name,
+        COUNT(r.order_id) AS return_count,
+        DENSE_RANK() OVER (PARTITION BY p.category ORDER BY COUNT(r.order_id) DESC) AS rank_in_category
+    FROM products p
+    JOIN order_items oi ON p.product_id = oi.product_id
+    JOIN orders o ON oi.order_id = o.order_id
+    LEFT JOIN returns r ON o.order_id = r.order_id
+    GROUP BY p.category, p.product_name
+)
+SELECT 
+    category,
+    product_name,
+    return_count,
+    rank_in_category
+FROM RankedProducts
+WHERE rank_in_category <= 3;
+
+SELECT 
+    c.state,
+    COUNT(DISTINCT o.order_id) AS total_orders,
+    COUNT(DISTINCT r.order_id) AS total_returns,
+    ROUND(COUNT(DISTINCT r.order_id) * 100.0 / COUNT(DISTINCT o.order_id), 2) AS return_rate_pct,
+    CASE 
+        WHEN (COUNT(DISTINCT r.order_id) * 1.0 / COUNT(DISTINCT o.order_id)) >= 0.08 THEN 'High Risk Hub'
+        WHEN (COUNT(DISTINCT r.order_id) * 1.0 / COUNT(DISTINCT o.order_id)) >= 0.04 THEN 'Moderate Risk'
+        ELSE 'Low Risk'
+    END AS risk_tier
+FROM customers c
+JOIN orders o ON c.customer_id = o.customer_id
+LEFT JOIN returns r ON o.order_id = r.order_id
+GROUP BY c.state
+HAVING COUNT(DISTINCT o.order_id) >= 10
+ORDER BY return_rate_pct DESC;
+
+SELECT 
+    p.category,
+    r.return_reason,
+    COUNT(r.order_id) AS defect_count,
+    ROUND(COUNT(r.order_id) * 100.0 / SUM(COUNT(r.order_id)) OVER (PARTITION BY p.category), 2) AS pct_of_category_returns
+FROM products p
+JOIN order_items oi ON p.product_id = oi.product_id
+JOIN returns r ON oi.order_id = r.order_id
+GROUP BY p.category, r.return_reason
+ORDER BY p.category, defect_count DESC;
+
+WITH CustomerActivity AS (
+    SELECT 
+        c.customer_id,
+        c.city,
+        COUNT(DISTINCT o.order_id) AS total_orders,
+        COUNT(DISTINCT r.order_id) AS returned_orders
+    FROM customers c
+    JOIN orders o ON c.customer_id = o.customer_id
+    LEFT JOIN returns r ON o.order_id = r.order_id
+    GROUP BY c.customer_id, c.city
+)
+SELECT 
+    CASE 
+        WHEN returned_orders = 0 THEN 'Satisfied (0 Returns)'
+        WHEN returned_orders = 1 THEN 'Single Defect Return'
+        ELSE 'Chronic Returner (2+)'
+    END AS customer_segment,
+    COUNT(customer_id) AS total_customers,
+    SUM(total_orders) AS total_orders_placed,
+    ROUND(AVG(total_orders), 2) AS avg_orders_per_user
+FROM CustomerActivity
+GROUP BY 1
+ORDER BY total_customers DESC;
